@@ -65,7 +65,10 @@ upstream_version="$(node -p 'require("./apps/desktop/package.json").version')"
 IFS=. read -r version_major version_minor version_patch <<< "$upstream_version"
 version="${version_major}.${version_minor}.$((version_patch + 1))-nightly.$(date -u +%Y%m%d).$(date -u +%s)"
 
-vp install --frozen-lockfile
+vp install --frozen-lockfile --prefer-offline \
+  --filter @t3tools/monorepo \
+  --filter '@t3tools/desktop...' \
+  --filter 't3...'
 vp test run apps/desktop/src/updates/DesktopUpdates.test.ts
 
 T3CODE_DESKTOP_UPDATE_REPOSITORY="$RELEASE_REPO" \
