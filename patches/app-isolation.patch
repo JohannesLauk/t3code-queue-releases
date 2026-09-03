@@ -1,0 +1,257 @@
+diff --git a/apps/desktop/src/app/DesktopEnvironment.test.ts b/apps/desktop/src/app/DesktopEnvironment.test.ts
+--- a/apps/desktop/src/app/DesktopEnvironment.test.ts
++++ b/apps/desktop/src/app/DesktopEnvironment.test.ts
+@@ -68,8 +68,8 @@ describe("DesktopEnvironment", () => {
+       assert.equal(environment.serverRoot, "/repo");
+       assert.equal(environment.backendEntryPath, "/repo/apps/server/dist/bin.mjs");
+       assert.equal(environment.backendCwd, "/repo");
+-      assert.equal(environment.appUserModelId, "com.t3tools.t3code.dev");
+-      assert.equal(environment.linuxWmClass, "t3code-dev");
++      assert.equal(environment.appUserModelId, "com.johanneslauk.t3codequeue.dev");
++      assert.equal(environment.linuxWmClass, "t3code-queue-dev");
+       assert.deepEqual(
+         Option.map(environment.devServerUrl, (url) => url.href),
+         Option.some("http://localhost:5173/"),
+@@ -96,8 +96,8 @@ describe("DesktopEnvironment", () => {
+       assert.equal(environment.logDir, "/tmp/t3/userdata/logs");
+       assert.equal(environment.browserArtifactsDir, "/tmp/t3/userdata/browser-artifacts");
+       assert.equal(environment.serverSettingsPath, "/tmp/t3/userdata/settings.json");
+-      assert.equal(environment.userDataDirName, "t3code");
+-      assert.equal(environment.legacyUserDataDirName, "T3 Code (Alpha)");
++      assert.equal(environment.userDataDirName, "t3code-queue");
++      assert.equal(environment.legacyUserDataDirName, "t3code-queue");
+     }),
+   );
+ 
+@@ -127,8 +127,8 @@ describe("DesktopEnvironment", () => {
+       );
+       const production = yield* makeEnvironment();
+ 
+-      assert.equal(development.stateDir, "/Users/alice/.t3/dev");
+-      assert.equal(production.stateDir, "/Users/alice/.t3/userdata");
++      assert.equal(development.stateDir, "/Users/alice/.t3-queue/dev");
++      assert.equal(production.stateDir, "/Users/alice/.t3-queue/userdata");
+     }),
+   );
+ 
+diff --git a/apps/desktop/src/app/DesktopEnvironment.ts b/apps/desktop/src/app/DesktopEnvironment.ts
+--- a/apps/desktop/src/app/DesktopEnvironment.ts
++++ b/apps/desktop/src/app/DesktopEnvironment.ts
+@@ -85,7 +85,7 @@ export class DesktopEnvironment extends Context.Service<
+   }
+ >()("@t3tools/desktop/app/DesktopEnvironment") {}
+ 
+-const APP_BASE_NAME = "T3 Code";
++const APP_BASE_NAME = "T3 Code Queue";
+ 
+ function resolveDesktopAppStageLabel(input: {
+   readonly isDevelopment: boolean;
+@@ -178,8 +178,8 @@ const make = Effect.fn("desktop.environment.make")(function* (
+     joinPath: path.join,
+     t3Home: config.t3Home,
+   });
+-  const userDataDirName = isDevelopment ? "t3code-dev" : "t3code";
+-  const legacyUserDataDirName = isDevelopment ? "T3 Code (Dev)" : "T3 Code (Alpha)";
++  const userDataDirName = isDevelopment ? "t3code-queue-dev" : "t3code-queue";
++  const legacyUserDataDirName = userDataDirName;
+   const linuxApplicationsDir = path.join(
+     Option.getOrElse(config.xdgDataHome, () => path.join(homeDirectory, ".local", "share")),
+     "applications",
+@@ -224,10 +224,10 @@ const make = Effect.fn("desktop.environment.make")(function* (
+     branding,
+     displayName,
+     appUserModelId: Option.getOrElse(config.appUserModelIdOverride, () =>
+-      isDevelopment ? "com.t3tools.t3code.dev" : "com.t3tools.t3code",
++      isDevelopment ? "com.johanneslauk.t3codequeue.dev" : "com.johanneslauk.t3codequeue",
+     ),
+-    linuxDesktopEntryName: isDevelopment ? "t3code-dev.desktop" : "t3code.desktop",
+-    linuxWmClass: isDevelopment ? "t3code-dev" : "t3code",
++    linuxDesktopEntryName: isDevelopment ? "t3code-queue-dev.desktop" : "t3code-queue.desktop",
++    linuxWmClass: isDevelopment ? "t3code-queue-dev" : "t3code-queue",
+     linuxApplicationsDir,
+     appImagePath: config.appImagePath,
+     userDataDirName,
+diff --git a/apps/desktop/src/app/DesktopStatePaths.ts b/apps/desktop/src/app/DesktopStatePaths.ts
+--- a/apps/desktop/src/app/DesktopStatePaths.ts
++++ b/apps/desktop/src/app/DesktopStatePaths.ts
+@@ -16,7 +16,7 @@ export function resolveDesktopBaseDir(input: {
+   readonly t3Home: Option.Option<string>;
+ }): string {
+   return Option.getOrElse(normalizeConfiguredBaseDir(input.t3Home), () =>
+-    input.joinPath(input.homeDirectory, ".t3"),
++    input.joinPath(input.homeDirectory, ".t3-queue"),
+   );
+ }
+ 
+diff --git a/apps/desktop/src/electron/ElectronProtocol.ts b/apps/desktop/src/electron/ElectronProtocol.ts
+--- a/apps/desktop/src/electron/ElectronProtocol.ts
++++ b/apps/desktop/src/electron/ElectronProtocol.ts
+@@ -9,8 +9,8 @@ import * as Scope from "effect/Scope";
+ import * as Electron from "electron";
+ 
+ export const DESKTOP_HOST = "app";
+-export const DESKTOP_PRODUCTION_SCHEME = "t3code";
+-export const DESKTOP_DEVELOPMENT_SCHEME = "t3code-dev";
++export const DESKTOP_PRODUCTION_SCHEME = "t3code-queue";
++export const DESKTOP_DEVELOPMENT_SCHEME = "t3code-queue-dev";
+ 
+ export function getDesktopScheme(isDevelopment: boolean): string {
+   return isDevelopment ? DESKTOP_DEVELOPMENT_SCHEME : DESKTOP_PRODUCTION_SCHEME;
+diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-artifact.test.ts
+--- a/scripts/build-desktop-artifact.test.ts
++++ b/scripts/build-desktop-artifact.test.ts
+@@ -256,9 +256,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+     assert.equal(resolveDesktopUpdateChannel("0.0.17"), "latest");
+   });
+ 
+-  it("switches desktop packaging product names to nightly for nightly builds", () => {
+-    assert.equal(resolveDesktopProductName("0.0.17"), "T3 Code (Alpha)");
+-    assert.equal(resolveDesktopProductName("0.0.17-nightly.20260413.42"), "T3 Code (Nightly)");
++  it("keeps the queue distribution product name stable across update channels", () => {
++    assert.equal(resolveDesktopProductName("0.0.17"), "T3 Code Queue");
++    assert.equal(resolveDesktopProductName("0.0.17-nightly.20260413.42"), "T3 Code Queue");
+   });
+ 
+   it("switches desktop packaging icons to the nightly artwork for nightly versions", () => {
+@@ -643,7 +643,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+         "**/node_modules/.bin/**",
+       ]);
+       assert.deepStrictEqual(mac.dmg, {
+-        title: "T3 Code (Alpha) 1.2.3 Installer",
++        title: "T3 Code Queue 1.2.3 Installer",
+         background: "dmg/dmg-background-latest.png",
+         window: { width: 540, height: 412 },
+         contents: [
+@@ -654,9 +654,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+         iconTextSize: 12,
+       });
+       // Linux must register the renderer schemes so the generated .desktop
+-      // entry advertises MimeType=x-scheme-handler/t3code; for OAuth deep links.
++      // entry advertises MimeType=x-scheme-handler/t3code-queue; for OAuth deep links.
+       assert.deepStrictEqual((linux.linux as Record<string, unknown>).protocols, [
+-        { name: "T3 Code", schemes: ["t3code", "t3code-dev"] },
++        { name: "T3 Code Queue", schemes: ["t3code-queue", "t3code-queue-dev"] },
+       ]);
+       assert.deepStrictEqual(mac.files, [...DESKTOP_FILE_EXCLUSIONS, ...MAC_FILE_EXCLUSIONS]);
+       assert.notProperty(mac.mac as Record<string, unknown>, "sign");
+@@ -1484,7 +1484,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+     });
+ 
+     assert.deepStrictEqual(configuration, {
+-      appId: "com.t3tools.t3code",
++      appId: "com.johanneslauk.t3codequeue",
+       teamId: "ABC1234567",
+       rpDomains: ["example.clerk.accounts.dev"],
+       provisioningProfilePath: "/tmp/t3code.provisionprofile",
+@@ -1504,7 +1504,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+       "clerk.example.com",
+       "example.clerk.accounts.dev",
+     ]);
+-    assert.include(entitlements, "<string>ABC1234567.com.t3tools.t3code</string>");
++    assert.include(entitlements, "<string>ABC1234567.com.johanneslauk.t3codequeue</string>");
+     assert.include(entitlements, "<string>webcredentials:clerk.example.com</string>");
+     assert.include(entitlements, "<string>webcredentials:example.clerk.accounts.dev</string>");
+     assert.include(entitlements, "<key>com.apple.security.cs.allow-jit</key>");
+@@ -1599,12 +1599,12 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+       });
+ 
+       const mac = config.mac as Record<string, unknown>;
+-      assert.equal(config.appId, "com.t3tools.t3code");
++      assert.equal(config.appId, "com.johanneslauk.t3codequeue");
+       assert.equal(mac.entitlements, "/tmp/entitlements.mac.plist");
+       assert.equal(mac.provisioningProfile, "/tmp/t3code.provisionprofile");
+       assert.match(String(mac.sign), /\/scripts\/sign-macos\.ts$/);
+       assert.deepStrictEqual(mac.protocols, [
+-        { name: "T3 Code", schemes: ["t3code", "t3code-dev"] },
++        { name: "T3 Code Queue", schemes: ["t3code-queue", "t3code-queue-dev"] },
+       ]);
+     }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))),
+   );
+diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.ts
+--- a/scripts/build-desktop-artifact.ts
++++ b/scripts/build-desktop-artifact.ts
+@@ -52,7 +52,7 @@ import { Command, Flag } from "effect/unstable/cli";
+ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+ 
+ const LINUX_ICON_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512] as const;
+-const DESKTOP_APP_ID = "com.t3tools.t3code";
++const DESKTOP_APP_ID = "com.johanneslauk.t3codequeue";
+ const APPLE_TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/u;
+ 
+ const BuildPlatform = Schema.Literals(["mac", "linux", "win"]);
+@@ -2406,9 +2406,7 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
+ }
+ 
+ export function resolveDesktopProductName(version: string): string {
+-  return resolveDesktopUpdateChannel(version) === "nightly"
+-    ? "T3 Code (Nightly)"
+-    : (desktopPackageJson.productName ?? "T3 Code");
++  return "T3 Code Queue";
+ }
+ 
+ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+@@ -2432,7 +2430,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+   const buildConfig: Record<string, unknown> = {
+     appId: DESKTOP_APP_ID,
+     productName: resolveDesktopProductName(version),
+-    artifactName: "T3-Code-${version}-${arch}.${ext}",
++    artifactName: "T3-Code-Queue-${version}-${arch}.${ext}",
+     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
+     files: [...DESKTOP_FILE_EXCLUSIONS, ...(platform === "mac" ? MAC_FILE_EXCLUSIONS : [])],
+     directories: {
+@@ -2472,8 +2470,8 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+       category: "public.app-category.developer-tools",
+       protocols: [
+         {
+-          name: "T3 Code",
+-          schemes: ["t3code", "t3code-dev"],
++          name: "T3 Code Queue",
++          schemes: ["t3code-queue", "t3code-queue-dev"],
+         },
+       ],
+       ...(signed ? { sign: path.join(repoRoot, "scripts/sign-macos.ts") } : {}),
+@@ -2512,21 +2510,21 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+   if (platform === "linux") {
+     buildConfig.linux = {
+       target: [target],
+-      executableName: "t3code",
++      executableName: "t3code-queue",
+       icon: "icons",
+       category: "Development",
+       // electron-builder turns these into MimeType=x-scheme-handler/<scheme>;
+       // in the .desktop entry (Exec already gets %U), so browsers can hand
+-      // t3code:// OAuth callbacks to the app.
++      // t3code-queue:// OAuth callbacks to the app.
+       protocols: [
+         {
+-          name: "T3 Code",
+-          schemes: ["t3code", "t3code-dev"],
++          name: "T3 Code Queue",
++          schemes: ["t3code-queue", "t3code-queue-dev"],
+         },
+       ],
+       desktop: {
+         entry: {
+-          StartupWMClass: "t3code",
++          StartupWMClass: "t3code-queue",
+         },
+       },
+     };
+@@ -3479,14 +3477,14 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
+       ? path.join(stageAppDir, WINDOWS_SERVER_RESOURCE_SOURCE_DIR, WINDOWS_SERVER_ASAR_RESOURCE)
+       : undefined;
+   const stagePackageJson: StagePackageJson = {
+-    name: "t3code",
++    name: "t3code-queue",
+     version: appVersion,
+     buildVersion: appVersion,
+     t3codeCommitHash: commitHash,
+     private: true,
+     packageManager: rootPackageJson.packageManager,
+-    description: "T3 Code desktop build",
+-    author: "T3 Tools",
++    description: "Queue-enabled T3 Code desktop build",
++    author: "Johannes Laukart",
+     main: "apps/desktop/dist-electron/main.cjs",
+     build: yield* createBuildConfig(
+       options.platform,

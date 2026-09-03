@@ -23,10 +23,12 @@ fi
 print -r -- "$$" > "$LOCK_DIR/pid"
 
 output_dir="$(mktemp -d /tmp/t3code-queue-release.XXXXXX)"
+verify_dir="$(mktemp -d /tmp/t3code-queue-verify.XXXXXX)"
 cleanup() {
   rm -f "$LOCK_DIR/pid"
   rmdir "$LOCK_DIR" 2>/dev/null || true
   rm -rf "$output_dir"
+  rm -rf "$verify_dir"
 }
 trap cleanup EXIT
 
@@ -69,6 +71,7 @@ apply_patch() {
 
 apply_patch "$CONFIG_REPO/patches/automatic-updates.patch"
 apply_patch "$CONFIG_REPO/patches/local-signing.patch"
+apply_patch "$CONFIG_REPO/patches/app-isolation.patch"
 
 upstream_version="$(node -p 'require("./apps/desktop/package.json").version')"
 IFS=. read -r version_major version_minor version_patch <<< "$upstream_version"
@@ -80,7 +83,11 @@ vp install --frozen-lockfile --prefer-offline \
   --filter '@t3tools/scripts...' \
   --filter 't3...' \
   -- --network-concurrency=4 --fetch-retries=5 --fetch-timeout=120000
-vp test run apps/desktop/src/updates/DesktopUpdates.test.ts
+vp test run \
+  apps/desktop/src/app/DesktopEnvironment.test.ts \
+  apps/desktop/src/electron/ElectronProtocol.test.ts \
+  apps/desktop/src/updates/DesktopUpdates.test.ts \
+  scripts/build-desktop-artifact.test.ts
 
 T3CODE_DESKTOP_UPDATE_REPOSITORY="$RELEASE_REPO" \
 CSC_NAME="$SIGNING_IDENTITY" \
@@ -90,10 +97,20 @@ vp run dist:desktop:dmg \
   --output-dir "$output_dir" \
   --signed
 
+queue_zips=("$output_dir"/T3-Code-Queue-*.zip(N))
+if (( ${#queue_zips} != 1 )); then
+  print "Expected one queue ZIP, found ${#queue_zips}." >&2
+  exit 1
+fi
+ditto -x -k "$queue_zips[1]" "$verify_dir"
+queue_app="$verify_dir/T3 Code Queue.app"
+codesign --verify --deep --strict "$queue_app"
+"$CONFIG_REPO/verify-isolation.sh" "/Applications/T3 Code.app" "$queue_app"
+
 gh release create "v$version" "$output_dir"/* \
   --repo "$RELEASE_REPO" \
   --title "T3 Code Queue $version" \
-  --notes "Queue-enabled T3 Code build from upstream commit $source_sha." \
+  --notes "Queue-enabled T3 Code build from upstream commit $source_sha. Uses its own app identity, updater cache, Electron profile, and ~/.t3-queue backend state." \
   --prerelease
 
 print -r -- "$source_sha" > "$STATE_FILE"
