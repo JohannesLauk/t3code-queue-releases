@@ -8,7 +8,7 @@ readonly STATE_DIR="/Users/johannes/Library/Application Support/T3 Code Queue Bu
 readonly STATE_FILE="$STATE_DIR/last-source-sha"
 readonly LOCK_DIR="/tmp/t3code-queue-builder.lock"
 readonly SIGNING_IDENTITY="Apple Development: Created via API (M8M7BY6JD8)"
-export PATH="/Users/johannes/.local/share/vite-plus/bin:/Users/johannes/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/Users/johannes/.cargo/bin:/Users/johannes/.local/share/vite-plus/bin:/Users/johannes/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   lock_pid="$(command cat "$LOCK_DIR/pid" 2>/dev/null || true)"
