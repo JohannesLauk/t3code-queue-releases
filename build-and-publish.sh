@@ -11,13 +11,22 @@ readonly SIGNING_IDENTITY="Apple Development: Created via API (M8M7BY6JD8)"
 export PATH="/Users/johannes/.local/share/vite-plus/bin:/Users/johannes/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  print "A T3 Code Queue build is already running."
-  exit 0
+  lock_pid="$(command cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+  if [[ "$lock_pid" == <-> ]] && kill -0 "$lock_pid" 2>/dev/null; then
+    print "A T3 Code Queue build is already running."
+    exit 0
+  fi
+  rm -f "$LOCK_DIR/pid"
+  rmdir "$LOCK_DIR"
+  mkdir "$LOCK_DIR"
 fi
+print -r -- "$$" > "$LOCK_DIR/pid"
 
 output_dir="$(mktemp -d /tmp/t3code-queue-release.XXXXXX)"
 cleanup() {
-  rm -rf "$LOCK_DIR" "$output_dir"
+  rm -f "$LOCK_DIR/pid"
+  rmdir "$LOCK_DIR" 2>/dev/null || true
+  rm -rf "$output_dir"
 }
 trap cleanup EXIT
 
