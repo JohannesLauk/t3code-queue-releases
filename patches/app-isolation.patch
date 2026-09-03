@@ -122,9 +122,13 @@ diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-arti
          background: "dmg/dmg-background-latest.png",
          window: { width: 540, height: 412 },
          contents: [
-@@ -654,9 +654,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+@@ -653,9 +653,13 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
          iconTextSize: 12,
        });
++      assert.equal(
++        mac.afterPack,
++        "/Users/johannes/Developer/t3code-queue-releases/rewrite-updater-cache.cjs",
++      );
        // Linux must register the renderer schemes so the generated .desktop
 -      // entry advertises MimeType=x-scheme-handler/t3code; for OAuth deep links.
 +      // entry advertises MimeType=x-scheme-handler/t3code-queue; for OAuth deep links.
@@ -134,7 +138,7 @@ diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-arti
        ]);
        assert.deepStrictEqual(mac.files, [...DESKTOP_FILE_EXCLUSIONS, ...MAC_FILE_EXCLUSIONS]);
        assert.notProperty(mac.mac as Record<string, unknown>, "sign");
-@@ -1484,7 +1484,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+@@ -1484,7 +1488,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
      });
  
      assert.deepStrictEqual(configuration, {
@@ -143,7 +147,7 @@ diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-arti
        teamId: "ABC1234567",
        rpDomains: ["example.clerk.accounts.dev"],
        provisioningProfilePath: "/tmp/t3code.provisionprofile",
-@@ -1504,7 +1504,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+@@ -1504,7 +1508,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
        "clerk.example.com",
        "example.clerk.accounts.dev",
      ]);
@@ -152,7 +156,7 @@ diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-arti
      assert.include(entitlements, "<string>webcredentials:clerk.example.com</string>");
      assert.include(entitlements, "<string>webcredentials:example.clerk.accounts.dev</string>");
      assert.include(entitlements, "<key>com.apple.security.cs.allow-jit</key>");
-@@ -1599,12 +1599,12 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+@@ -1599,12 +1603,12 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
        });
  
        const mac = config.mac as Record<string, unknown>;
@@ -170,16 +174,18 @@ diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-arti
 diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.ts
 --- a/scripts/build-desktop-artifact.ts
 +++ b/scripts/build-desktop-artifact.ts
-@@ -52,7 +52,7 @@ import { Command, Flag } from "effect/unstable/cli";
+@@ -52,7 +52,9 @@ import { Command, Flag } from "effect/unstable/cli";
  import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
  
  const LINUX_ICON_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512] as const;
 -const DESKTOP_APP_ID = "com.t3tools.t3code";
 +const DESKTOP_APP_ID = "com.johanneslauk.t3codequeue";
++const DESKTOP_AFTER_PACK_HOOK =
++  "/Users/johannes/Developer/t3code-queue-releases/rewrite-updater-cache.cjs";
  const APPLE_TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/u;
  
  const BuildPlatform = Schema.Literals(["mac", "linux", "win"]);
-@@ -2406,9 +2406,7 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
+@@ -2406,9 +2408,7 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
  }
  
  export function resolveDesktopProductName(version: string): string {
@@ -190,16 +196,17 @@ diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.
  }
  
  export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
-@@ -2432,7 +2430,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+@@ -2432,7 +2432,8 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
    const buildConfig: Record<string, unknown> = {
      appId: DESKTOP_APP_ID,
      productName: resolveDesktopProductName(version),
 -    artifactName: "T3-Code-${version}-${arch}.${ext}",
 +    artifactName: "T3-Code-Queue-${version}-${arch}.${ext}",
++    afterPack: DESKTOP_AFTER_PACK_HOOK,
      electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
      files: [...DESKTOP_FILE_EXCLUSIONS, ...(platform === "mac" ? MAC_FILE_EXCLUSIONS : [])],
      directories: {
-@@ -2472,8 +2470,8 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+@@ -2472,8 +2473,8 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
        category: "public.app-category.developer-tools",
        protocols: [
          {
@@ -210,7 +217,7 @@ diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.
          },
        ],
        ...(signed ? { sign: path.join(repoRoot, "scripts/sign-macos.ts") } : {}),
-@@ -2512,21 +2510,21 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+@@ -2512,21 +2513,21 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
    if (platform === "linux") {
      buildConfig.linux = {
        target: [target],
@@ -241,8 +248,7 @@ diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.
        ? path.join(stageAppDir, WINDOWS_SERVER_RESOURCE_SOURCE_DIR, WINDOWS_SERVER_ASAR_RESOURCE)
        : undefined;
    const stagePackageJson: StagePackageJson = {
--    name: "t3code",
-+    name: "t3code-queue",
+     name: "t3code",
      version: appVersion,
      buildVersion: appVersion,
      t3codeCommitHash: commitHash,

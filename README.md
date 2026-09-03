@@ -6,6 +6,7 @@ Personal macOS release channel for T3 Code with the message-queue pull request e
 - After the PR merges, builds automatically follow upstream `main`.
 - Updates download in the background and install when T3 Code Queue quits.
 - The queue app has a separate bundle ID, updater cache, Electron profile, URL scheme, and `~/.t3-queue` backend state.
+- It deliberately retains T3's macOS Safe Storage namespace so the inherited encrypted connection catalog remains readable without exposing or duplicating Keychain secrets.
 - Initial setup copies the official app's existing state once. Later writes remain isolated, so both apps can run without corrupting each other.
 
 Release artifacts are generated locally on the Mac mini. No credentials are stored in this repository.
