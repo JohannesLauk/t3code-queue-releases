@@ -1,0 +1,14 @@
+diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.ts
+--- a/scripts/build-desktop-artifact.ts
++++ b/scripts/build-desktop-artifact.ts
+@@ -3419,7 +3419,9 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
+   yield* fs.copy(stageResourcesDir, stageProdResourcesDir);
+ 
+   const configuredMacPasskeySigning =
+-    options.platform === "mac" && options.signed
++    options.platform === "mac" &&
++    options.signed &&
++    process.env.T3CODE_MACOS_PROVISIONING_PROFILE?.trim()
+       ? yield* Effect.try({
+           try: () => resolveMacPasskeySigningConfiguration(loadRepoEnv({ repoRoot })),
+           catch: MacPasskeySigningConfigurationResolutionError.fromCause,
