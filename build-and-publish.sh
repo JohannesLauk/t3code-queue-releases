@@ -7,7 +7,7 @@ readonly RELEASE_REPO="JohannesLauk/t3code-queue-releases"
 readonly STATE_DIR="/Users/johannes/Library/Application Support/T3 Code Queue Builder"
 readonly STATE_FILE="$STATE_DIR/last-source-sha"
 readonly LOCK_DIR="/tmp/t3code-queue-builder.lock"
-readonly CSC_NAME="Apple Development: Created via API (M8M7BY6JD8)"
+readonly SIGNING_IDENTITY="Apple Development: Created via API (M8M7BY6JD8)"
 export PATH="/Users/johannes/.local/share/vite-plus/bin:/Users/johannes/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -73,7 +73,7 @@ vp install --frozen-lockfile --prefer-offline \
 vp test run apps/desktop/src/updates/DesktopUpdates.test.ts
 
 T3CODE_DESKTOP_UPDATE_REPOSITORY="$RELEASE_REPO" \
-CSC_NAME="$CSC_NAME" \
+CSC_NAME="$SIGNING_IDENTITY" \
 vp run dist:desktop:dmg \
   --arch arm64 \
   --build-version "$version" \
