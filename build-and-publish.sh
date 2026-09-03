@@ -77,6 +77,7 @@ version="${version_major}.${version_minor}.$((version_patch + 1))-nightly.$(date
 vp install --frozen-lockfile --prefer-offline \
   --filter @t3tools/monorepo \
   --filter '@t3tools/desktop...' \
+  --filter '@t3tools/scripts...' \
   --filter 't3...' \
   -- --network-concurrency=4 --fetch-retries=5 --fetch-timeout=120000
 vp test run apps/desktop/src/updates/DesktopUpdates.test.ts
