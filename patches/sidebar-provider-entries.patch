@@ -7,7 +7,7 @@ index 90cda4e7..7a018e8d 100644
  const SETTLED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:settled-expanded";
  const SNOOZED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:snoozed-expanded";
 +const EMPTY_PROVIDER_ENTRIES: ReadonlyMap<string, ProviderInstanceEntry> = new Map();
- 
+
  function compactSidebarTimeLabel(label: string): string {
    if (label === "just now") return "now";
 @@ -3994,5 +3995,4 @@ export default function Sidebar() {
