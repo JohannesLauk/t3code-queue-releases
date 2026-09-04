@@ -9,6 +9,6 @@ Personal macOS release channel for T3 Code with the message-queue pull request e
 - It uses the existing `~/.t3` backend state so threads never split into divergent copies.
 - Run T3 Code Queue as the only active T3 desktop app on each Mac.
 - It deliberately retains T3's macOS Safe Storage namespace so the inherited encrypted connection catalog remains readable without exposing or duplicating Keychain secrets.
-- Initial setup copies the official app's existing state once. Later writes remain isolated, so both apps can run without corrupting each other.
+- The one-time migration archives the former `.t3-queue` snapshot instead of merging or overwriting either database.
 
 Release artifacts are generated locally on the Mac mini. No credentials are stored in this repository.
