@@ -72,6 +72,8 @@ apply_patch() {
 apply_patch "$CONFIG_REPO/patches/automatic-updates.patch"
 apply_patch "$CONFIG_REPO/patches/local-signing.patch"
 apply_patch "$CONFIG_REPO/patches/app-isolation.patch"
+apply_patch "$CONFIG_REPO/patches/sidebar-provider-entries.patch"
+cp .env.example .env
 
 upstream_version="$(node -p 'require("./apps/desktop/package.json").version')"
 IFS=. read -r version_major version_minor version_patch <<< "$upstream_version"

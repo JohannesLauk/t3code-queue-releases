@@ -83,20 +83,6 @@ diff --git a/apps/desktop/src/app/DesktopStatePaths.ts b/apps/desktop/src/app/De
    );
  }
  
-diff --git a/apps/desktop/src/electron/ElectronProtocol.ts b/apps/desktop/src/electron/ElectronProtocol.ts
---- a/apps/desktop/src/electron/ElectronProtocol.ts
-+++ b/apps/desktop/src/electron/ElectronProtocol.ts
-@@ -9,8 +9,8 @@ import * as Scope from "effect/Scope";
- import * as Electron from "electron";
- 
- export const DESKTOP_HOST = "app";
--export const DESKTOP_PRODUCTION_SCHEME = "t3code";
--export const DESKTOP_DEVELOPMENT_SCHEME = "t3code-dev";
-+export const DESKTOP_PRODUCTION_SCHEME = "t3code-queue";
-+export const DESKTOP_DEVELOPMENT_SCHEME = "t3code-queue-dev";
- 
- export function getDesktopScheme(isDevelopment: boolean): string {
-   return isDevelopment ? DESKTOP_DEVELOPMENT_SCHEME : DESKTOP_PRODUCTION_SCHEME;
 diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-artifact.test.ts
 --- a/scripts/build-desktop-artifact.test.ts
 +++ b/scripts/build-desktop-artifact.test.ts

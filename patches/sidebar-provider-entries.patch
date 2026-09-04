@@ -1,0 +1,18 @@
+diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
+index 90cda4e7..7a018e8d 100644
+--- a/apps/web/src/components/Sidebar.tsx
++++ b/apps/web/src/components/Sidebar.tsx
+@@ -206,6 +206,7 @@ const SETTLED_TAIL_PAGE_COUNT = 25;
+ // Keep the v2 key so existing preferences survive the v2-to-default rename.
+ const SETTLED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:settled-expanded";
+ const SNOOZED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:snoozed-expanded";
++const EMPTY_PROVIDER_ENTRIES: ReadonlyMap<string, ProviderInstanceEntry> = new Map();
+ 
+ function compactSidebarTimeLabel(label: string): string {
+   if (label === "just now") return "now";
+@@ -3994,5 +3995,4 @@ export default function Sidebar() {
+       <SidebarChromeFooter />
+     </>
+   );
+-  const EMPTY_PROVIDER_ENTRIES: ReadonlyMap<string, ProviderInstanceEntry> = new Map();
+ }
