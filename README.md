@@ -5,7 +5,9 @@ Personal macOS release channel for T3 Code with the message-queue pull request e
 - The Mac mini builds from `pingdotgg/t3code` PR #2829 while it is open.
 - After the PR merges, builds automatically follow upstream `main`.
 - Updates download in the background and install when T3 Code Queue quits.
-- The queue app has a separate bundle ID, updater cache, Electron profile, URL scheme, and `~/.t3-queue` backend state.
+- The queue app has a separate bundle ID, updater cache, Electron profile, and URL scheme.
+- It uses the existing `~/.t3` backend state so threads never split into divergent copies.
+- Run T3 Code Queue as the only active T3 desktop app on each Mac.
 - It deliberately retains T3's macOS Safe Storage namespace so the inherited encrypted connection catalog remains readable without exposing or duplicating Keychain secrets.
 - Initial setup copies the official app's existing state once. Later writes remain isolated, so both apps can run without corrupting each other.
 

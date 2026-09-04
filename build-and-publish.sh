@@ -112,7 +112,7 @@ codesign --verify --deep --strict "$queue_app"
 gh release create "v$version" "$output_dir"/* \
   --repo "$RELEASE_REPO" \
   --title "T3 Code Queue $version" \
-  --notes "Queue-enabled T3 Code build from upstream commit $source_sha. Uses its own app identity, updater cache, Electron profile, and ~/.t3-queue backend state." \
+  --notes "Queue-enabled T3 Code build from upstream commit $source_sha. Uses its own app identity, updater cache, and Electron profile while keeping ~/.t3 as the canonical backend state." \
   --prerelease
 
 print -r -- "$source_sha" > "$STATE_FILE"

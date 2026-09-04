@@ -23,17 +23,6 @@ diff --git a/apps/desktop/src/app/DesktopEnvironment.test.ts b/apps/desktop/src/
      }),
    );
  
-@@ -127,8 +127,8 @@ describe("DesktopEnvironment", () => {
-       );
-       const production = yield* makeEnvironment();
- 
--      assert.equal(development.stateDir, "/Users/alice/.t3/dev");
--      assert.equal(production.stateDir, "/Users/alice/.t3/userdata");
-+      assert.equal(development.stateDir, "/Users/alice/.t3-queue/dev");
-+      assert.equal(production.stateDir, "/Users/alice/.t3-queue/userdata");
-     }),
-   );
- 
 diff --git a/apps/desktop/src/app/DesktopEnvironment.ts b/apps/desktop/src/app/DesktopEnvironment.ts
 --- a/apps/desktop/src/app/DesktopEnvironment.ts
 +++ b/apps/desktop/src/app/DesktopEnvironment.ts
@@ -71,18 +60,6 @@ diff --git a/apps/desktop/src/app/DesktopEnvironment.ts b/apps/desktop/src/app/D
      linuxApplicationsDir,
      appImagePath: config.appImagePath,
      userDataDirName,
-diff --git a/apps/desktop/src/app/DesktopStatePaths.ts b/apps/desktop/src/app/DesktopStatePaths.ts
---- a/apps/desktop/src/app/DesktopStatePaths.ts
-+++ b/apps/desktop/src/app/DesktopStatePaths.ts
-@@ -16,7 +16,7 @@ export function resolveDesktopBaseDir(input: {
-   readonly t3Home: Option.Option<string>;
- }): string {
-   return Option.getOrElse(normalizeConfiguredBaseDir(input.t3Home), () =>
--    input.joinPath(input.homeDirectory, ".t3"),
-+    input.joinPath(input.homeDirectory, ".t3-queue"),
-   );
- }
- 
 diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-artifact.test.ts
 --- a/scripts/build-desktop-artifact.test.ts
 +++ b/scripts/build-desktop-artifact.test.ts
